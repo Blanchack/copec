@@ -4,13 +4,15 @@
 #include <string>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 
 using namespace std;
 
-vector<char*> makeArgv(const string &cmd) {
+vector<char*> makeArgv(const string &command) {
     vector<string> parts;
-    stringstream iss;
+    stringstream iss(command);
     string word;
     while (iss >> word) parts.push_back(word);
 
@@ -51,9 +53,8 @@ int main()
         getline(cin, command);
 
         if(command.empty()) continue;
-        if(command == "exit") shouldExit = true;
-
-        exeCommand(command);
+        else if(command == "exit") shouldExit = true;
+        else exeCommand(command);
     }
     return 0;
 }

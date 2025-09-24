@@ -1,17 +1,59 @@
-#include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <signal.h>
+#include <unistd.h>
+#include <time.h>
 
 using namespace std;
 
+vector<char*> makeArgv(const string &cmd) {
+    vector<string> parts;
+    stringstream iss;
+    string word;
+    while (iss >> word) parts.push_back(word);
+
+    vector<char*> argv;
+    for (auto &p : parts) argv.push_back(const_cast<char*>(p.c_str()));
+    argv.push_back(nullptr);
+    return argv;
+}
+
+void exeCommand(const string& command){
+    vector<char*> argv = makeArgv(command);
+    if(argv[0] == nullptr) return;
+
+    unsigned int pid = fork();
+    if (pid == 0) {                         //Soy el hijo?
+        execvp(argv[0], argv.data());       //Ejecuto el comando y no vuelvo
+        perror("execvp");                   //Volvi, entonces error
+        _exit(127);                         //command not found
+
+    } else if (pid > 0) {                   //Soy el padre?
+        int status;
+        waitpid(pid, &status, 0);           //Espero a que mi hijo termine
+    } else {
+        perror("fork");                     //error en el fork
+    }
+}
+
 int main()
 {
+    bool shouldExit = false;
+
     string command;
+    while (!shouldExit)
+    {
+        // prompt para el comando
+        // para este tipo de prompts, no se necesitan llamadas a sistema
+        cout << "Enter a command:$ ";
+        getline(cin, command);
 
-    // prompt para el comando
-    // para este tipo de prompts, no se necesitan llamadas a sistema
-    cout << "Enter a command: ";
+        if(command.empty()) continue;
+        if(command == "exit") shouldExit = true;
 
-    // para weas mas dinamicas se deben usar las llamadas a sistema
-
-    cin >> command;
+        exeCommand(command);
+    }
+    return 0;
 }

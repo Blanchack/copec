@@ -18,7 +18,7 @@ vector<char *> makeArgv(const string &command)
     while (ss >> word)
         parts.push_back(word);
 
-        static vector<string> aliveStrings;
+    static vector<string> aliveStrings;
     aliveStrings = parts;
 
     vector<char *> argv;
@@ -103,7 +103,6 @@ void executePipe(const vector<string> &commands)
     if (numCommands == 0)
         return;
 
-    // Crear n-1 pipes
     vector<int> pfd;
     if (numCommands > 1)
         pfd.resize(2 * (numCommands - 1));

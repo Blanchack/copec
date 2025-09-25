@@ -18,8 +18,7 @@ vector<char *> makeArgv(const string &command)
     while (ss >> word)
         parts.push_back(word);
 
-    // Guardamos los strings vivos en un vector estático para que c_str() sea válido
-    static vector<string> aliveStrings;
+        static vector<string> aliveStrings;
     aliveStrings = parts;
 
     vector<char *> argv;

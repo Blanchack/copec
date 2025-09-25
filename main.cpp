@@ -27,7 +27,7 @@ void exeCommand(const string& command){
     if(argv[0] == nullptr) return;
 
     unsigned int pid = fork();
-    if (pid == 0) {                         //Soy el hijo? EEE MI IJOOOOO
+    if (pid == 0) {                         //Soy el hijo? EEE MI hijo
         execvp(argv[0], argv.data());       //Ejecuto el comando y no vuelvo
         perror("execvp");                   //Volvi, entonces error
         _exit(127);                         //command not found
@@ -38,8 +38,33 @@ void exeCommand(const string& command){
     } else {
         perror("fork");                     //error en el fork
     }
-}
 
+}
+    void exemiprof(const string& command){
+        vector<char*> argv = makeArgv(command);
+        if(argv.size() < 2) {
+            cerr << "Uso: miprof [ejec|ejecsave archivo|maxtiempo N] comando args\n";
+            return;
+
+        }
+        string mode = argv[1]; 
+
+        if (mode== "ejec"){
+            /////
+        }
+
+        else if (mode == "ejecsave"){
+            ///////
+        }
+
+        else if (mode== "maximoresidentset"){
+            //////
+        }
+
+        else {
+            cerr << "Modo incorrecto\n";
+        }
+    }
 int main()
 {
     bool shouldExit = false;
@@ -54,6 +79,9 @@ int main()
 
         if(command.empty()) continue;
         else if(command == "exit") shouldExit = true;
+        else if (command.rfind ("myproof", 0) == 0) {
+            exemiprof(command);
+        }
         else exeCommand(command);
     }
     return 0;

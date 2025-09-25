@@ -12,14 +12,18 @@ using namespace std;
 
 vector<char *> makeArgv(const string &command)
 {
-    vector<string> parts;
-    stringstream iss(command);
+    stringstream ss(command);
     string word;
-    while (iss >> word)
+    vector<string> parts;
+    while (ss >> word)
         parts.push_back(word);
 
+    // Guardamos los strings vivos en un vector estático para que c_str() sea válido
+    static vector<string> aliveStrings;
+    aliveStrings = parts;
+
     vector<char *> argv;
-    for (auto &p : parts)
+    for (auto &p : aliveStrings)
         argv.push_back(const_cast<char *>(p.c_str()));
     argv.push_back(nullptr);
     return argv;
@@ -48,6 +52,7 @@ void exeCommand(const string &command)
         perror("fork"); // error en el fork
     }
 }
+
 void exemiprof(const string &command)
 {
     vector<char *> argv = makeArgv(command);
@@ -93,6 +98,81 @@ vector<string> split(const string &str, char delimiter)
     return tokens;
 }
 
+void executePipe(const vector<string> &commands)
+{
+    int numCommands = commands.size();
+    if (numCommands == 0)
+        return;
+
+    // Crear n-1 pipes
+    vector<int> pfd;
+    if (numCommands > 1)
+        pfd.resize(2 * (numCommands - 1));
+    for (int i = 0; i < numCommands - 1; ++i)
+    {
+        if (pipe(&pfd[2 * i]) == -1)
+        {
+            perror("pipe");
+            return;
+        }
+    }
+
+    vector<pid_t> children;
+
+    for (int i = 0; i < numCommands; ++i)
+    {
+        pid_t pid = fork();
+        if (pid == -1)
+        {
+            perror("fork");
+            return;
+        }
+
+        if (pid == 0)
+        {
+            // --- hijo ---
+            // stdin del comando actual
+            if (i > 0)
+            {
+                dup2(pfd[2 * (i - 1)], STDIN_FILENO);
+            }
+            // stdout del comando actual
+            if (i < numCommands - 1)
+            {
+                dup2(pfd[2 * i + 1], STDOUT_FILENO);
+            }
+
+            // Cerrar todos los fds de pipes
+            for (size_t j = 0; j < pfd.size(); ++j)
+                close(pfd[j]);
+
+            // Preparar argv y ejecutar
+            vector<char *> argv = makeArgv(commands[i]);
+            execvp(argv[0], argv.data());
+
+            // Si exec falla
+            perror("execvp");
+            _exit(127);
+        }
+        else
+        {
+            // --- padre ---
+            children.push_back(pid);
+        }
+    }
+
+    // Padre cierra todos los fds de los pipes
+    for (size_t j = 0; j < pfd.size(); ++j)
+        close(pfd[j]);
+
+    // Esperar a todos los hijos
+    int status;
+    for (pid_t c : children)
+    {
+        waitpid(c, &status, 0);
+    }
+}
+
 int main()
 {
     bool shouldExit = false;
@@ -109,12 +189,21 @@ int main()
             continue;
         else if (command == "exit")
             shouldExit = true;
-        else if (command.rfind("myproof", 0) == 0)
+        else if (command.rfind("miproof", 0) == 0)
         {
             exemiprof(command);
         }
+        else if (command.find('|') != string::npos)
+        {
+            vector<string> commands = split(command, '|');
+            // funcion para las pipes
+            executePipe(commands);
+        }
         else
+        {
+            // funcion para comandos simples
             exeCommand(command);
+        }
     }
     return 0;
 }

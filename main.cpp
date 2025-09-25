@@ -27,7 +27,7 @@ void exeCommand(const string& command){
     if(argv[0] == nullptr) return;
 
     unsigned int pid = fork();
-    if (pid == 0) {                         //Soy el hijo?
+    if (pid == 0) {                         //Soy el hijo? EEE MI IJOOOOO
         execvp(argv[0], argv.data());       //Ejecuto el comando y no vuelvo
         perror("execvp");                   //Volvi, entonces error
         _exit(127);                         //command not found

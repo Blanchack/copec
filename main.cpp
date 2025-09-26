@@ -239,22 +239,21 @@ void exemiprof(const string &command)
 
             clock_gettime(CLOCK_REALTIME, &end);
 
+        if (!WIFSIGNALED(status) || WTERMSIG(status) != SIGKILL)
+        {
+    
             double real_time = (end.tv_sec - start.tv_sec) +
                                (end.tv_nsec - start.tv_nsec) / 1e9;
             double user_time = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6;
-            double sys_time  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
+            double sys_time = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
 
-            if (WIFSIGNALED(status) && WTERMSIG(status) == SIGKILL) {
-                cerr << "Proceso terminado por exceder tiempo (" 
-                     << limite << " seg)\n";
-            } else {
-                cout << "---- Resultados miprof ----\n";
-                cout << "Comando: " << cmd << "\n";
-                cout << "Tiempo real: " << real_time << " s\n";
-                cout << "Tiempo usuario: " << user_time << " s\n";
-                cout << "Tiempo sistema: " << sys_time << " s\n";
-                cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
-            }
+            cout << "---- Resultados miprof ----\n";
+            cout << "Comando: " << cmd << "\n";
+            cout << "Tiempo real: " << real_time << " s\n";
+            cout << "Tiempo usuario: " << user_time << " s\n";
+            cout << "Tiempo sistema: " << sys_time << " s\n";
+            cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
+        }
         }
     }
 

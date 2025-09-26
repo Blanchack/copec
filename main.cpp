@@ -62,7 +62,7 @@ void exemiprof(const string &command)
     }
     string mode = argv[1];
 
-   if (mode == "ejec")
+    if (mode == "ejec")
 {
     // Armar el comando real (todo lo que viene después de "miprof ejec")
     string cmd;
@@ -144,6 +144,7 @@ void executePipe(const vector<string> &commands)
     if (numCommands == 0)
         return;
 
+    // Crear n-1 pipes
     vector<int> pfd;
     if (numCommands > 1)
         pfd.resize(2 * (numCommands - 1));
@@ -228,7 +229,7 @@ int main()
             continue;
         else if (command == "exit")
             shouldExit = true;
-        else if (command.rfind("miproof", 0) == 0)
+        else if (command.rfind("miprof", 0) == 0)
         {
             exemiprof(command);
         }

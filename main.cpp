@@ -195,6 +195,68 @@ void exemiprof(const string &command)
     cout << "Tiempo sistema: " << sys_time << " s\n";
     cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
 }
+    else if (mode == "maxtiempo")
+    {
+        if (argv.size() < 4) {
+            cerr << "Uso: miprof maxtiempo N comando args\n";
+            return;
+        }
+
+        int limite = stoi(argv[2]);
+
+        string cmd;
+        for (int i = 3; argv[i]; i++) {
+            if (i > 3) cmd += " ";
+            cmd += argv[i];
+        }
+
+        if (cmd.empty()) {
+            cerr << "Falta comando a ejecutar\n";
+            return;
+        }
+
+        struct rusage usage;
+        struct timespec start, end;
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            if (cmd.find('|') != string::npos) {
+                vector<string> commands = split(cmd, '|');
+                executePipe(commands);
+            } else {
+                exeCommand(cmd);
+            }
+            _exit(0);
+        } else {
+            clock_gettime(CLOCK_REALTIME, &start);
+
+            alarm(limite);
+
+            int status;
+            wait4(pid, &status, 0, &usage);
+
+            alarm(0);
+
+            clock_gettime(CLOCK_REALTIME, &end);
+
+            double real_time = (end.tv_sec - start.tv_sec) +
+                               (end.tv_nsec - start.tv_nsec) / 1e9;
+            double user_time = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6;
+            double sys_time  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
+
+            if (WIFSIGNALED(status) && WTERMSIG(status) == SIGKILL) {
+                cerr << "Proceso terminado por exceder tiempo (" 
+                     << limite << " seg)\n";
+            } else {
+                cout << "---- Resultados miprof ----\n";
+                cout << "Comando: " << cmd << "\n";
+                cout << "Tiempo real: " << real_time << " s\n";
+                cout << "Tiempo usuario: " << user_time << " s\n";
+                cout << "Tiempo sistema: " << sys_time << " s\n";
+                cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
+            }
+        }
+    }
 
     else if (mode == "ejecsave")
     {
@@ -249,7 +311,7 @@ void exemiprof(const string &command)
     out << "----------------------\n";
     
 }
-
+    
 int main()
 {
     bool shouldExit = false;

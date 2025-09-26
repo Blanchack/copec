@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <fstream>
 
 using namespace std;
 
@@ -197,18 +198,56 @@ void exemiprof(const string &command)
 
     else if (mode == "ejecsave")
     {
-        ///////
+        if (argv.size() < 4) {
+            cerr << "Uso: miprof ejecsave archivo comando args\n";
+            return;
+        }
+    }
+    string filename = argv[2];
+    string cmd;
+    for (int i =3; argv[i]; i++){
+        if (i >3) cmd += " ";
+        cmd += argv[i];
+    }
+    if (cmd.empty()){
+        cerr << "Falta comando a ejecutar\n";
+        return;
     }
 
-    else if (mode == "maximoresidentset")
-    {
-        //////
+    struct rusage usage;
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
+
+    if (cmd.find('|') != string::npos){
+        vector<string> commands = split(cmd, '|');
+        executePipe(commands);
+    } else {
+        exeCommand(cmd);
     }
 
-    else
-    {
-        cerr << "Modo incorrecto\n";
-    }
+    clock_gettime(CLOCK_REALTIME, &end);
+    getrusage(RUSAGE_CHILDREN, &usage);
+
+    double real_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    double user_time = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6;
+    double sys_time = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
+
+    cout << "---- Resultados miprof ----\n";
+    cout << "Comando: " << cmd << "\n";
+    cout << "Tiempo real: " << real_time << " s\n";
+    cout << "Tiempo usuario: " << user_time << " s\n";
+    cout << "Tiempo sistema: " << sys_time << " s\n";
+    cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
+
+    // guardar en archivo
+    ofstream out(filename, ios::app);
+    out << "Comando: " << cmd << "\n";
+    out << "Tiempo real: " << real_time << " s\n";
+    out << "Tiempo usuario: " << user_time << " s\n";
+    out << "Tiempo sistema: " << sys_time << " s\n";
+    out << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
+    out << "----------------------\n";
+    
 }
 
 int main()

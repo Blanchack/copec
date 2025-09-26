@@ -52,78 +52,6 @@ void exeCommand(const string &command)
     }
 }
 
-void exemiprof(const string &command)
-{
-    vector<char *> argv = makeArgv(command);
-    if (argv.size() < 2)
-    {
-        cerr << "Uso: miprof [ejec|ejecsave archivo|maxtiempo N] comando args\n";
-        return;
-    }
-    string mode = argv[1];
-
-    if (mode == "ejec")
-{
-    // Armar el comando real (todo lo que viene después de "miprof ejec")
-    string cmd;
-    for (int i = 2; argv[i]; i++) {
-        if (i > 2) cmd += " ";
-        cmd += argv[i];
-    }
-
-    if (cmd.empty()) {
-        cerr << "Falta comando a ejecutar\n";
-        return;
-    }
-
-    // Medir tiempos
-    struct rusage usage;
-    struct timespec start, end;
-    clock_gettime(CLOCK_REALTIME, &start);
-
-    // Ejecutar con o sin pipes
-    if (cmd.find('|') != string::npos) {
-        vector<string> commands = split(cmd, '|');
-        executePipe(commands);   // función ya implementada
-    } else {
-        exeCommand(cmd);         // función ya implementada
-    }
-
-    clock_gettime(CLOCK_REALTIME, &end);
-    getrusage(RUSAGE_CHILDREN, &usage);
-
-    // Calcular tiempos
-    double real_time = (end.tv_sec - start.tv_sec) +
-                       (end.tv_nsec - start.tv_nsec) / 1e9;
-    double user_time = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6;
-    double sys_time  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
-
-    // Mostrar resultados
-    cout << "---- Resultados miprof ----\n";
-    cout << "Comando: " << cmd << "\n";
-    cout << "Tiempo real: " << real_time << " s\n";
-    cout << "Tiempo usuario: " << user_time << " s\n";
-    cout << "Tiempo sistema: " << sys_time << " s\n";
-    cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
-}
-
-
-    else if (mode == "ejecsave")
-    {
-        ///////
-    }
-
-    else if (mode == "maximoresidentset")
-    {
-        //////
-    }
-
-    else
-    {
-        cerr << "Modo incorrecto\n";
-    }
-}
-
 vector<string> split(const string &str, char delimiter)
 {
     vector<string> tokens;
@@ -210,6 +138,76 @@ void executePipe(const vector<string> &commands)
     for (pid_t c : children)
     {
         waitpid(c, &status, 0);
+    }
+}
+void exemiprof(const string &command)
+{
+    vector<char *> argv = makeArgv(command);
+    if (argv.size() < 2)
+    {
+        cerr << "Uso: miprof [ejec|ejecsave archivo|maxtiempo N] comando args\n";
+        return;
+    }
+    string mode = argv[1];
+
+    if (mode == "ejec")
+{
+    // Armar el comando real (todo lo que viene después de "miprof ejec")
+    string cmd;
+    for (int i = 2; argv[i]; i++) {
+        if (i > 2) cmd += " ";
+        cmd += argv[i];
+    }
+
+    if (cmd.empty()) {
+        cerr << "Falta comando a ejecutar\n";
+        return;
+    }
+
+    // Medir tiempos
+    struct rusage usage;
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
+
+    // Ejecutar con o sin pipes
+    if (cmd.find('|') != string::npos) {
+        vector<string> commands = split(cmd, '|');
+        executePipe(commands);   // función ya implementada
+    } else {
+        exeCommand(cmd);         // función ya implementada
+    }
+
+    clock_gettime(CLOCK_REALTIME, &end);
+    getrusage(RUSAGE_CHILDREN, &usage);
+
+    // Calcular tiempos
+    double real_time = (end.tv_sec - start.tv_sec) +
+                       (end.tv_nsec - start.tv_nsec) / 1e9;
+    double user_time = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6;
+    double sys_time  = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
+
+    // Mostrar resultados
+    cout << "---- Resultados miprof ----\n";
+    cout << "Comando: " << cmd << "\n";
+    cout << "Tiempo real: " << real_time << " s\n";
+    cout << "Tiempo usuario: " << user_time << " s\n";
+    cout << "Tiempo sistema: " << sys_time << " s\n";
+    cout << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
+}
+
+    else if (mode == "ejecsave")
+    {
+        ///////
+    }
+
+    else if (mode == "maximoresidentset")
+    {
+        //////
+    }
+
+    else
+    {
+        cerr << "Modo incorrecto\n";
     }
 }
 

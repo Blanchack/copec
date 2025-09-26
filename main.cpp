@@ -263,7 +263,7 @@ void exemiprof(const string &command)
             cerr << "Uso: miprof ejecsave archivo comando args\n";
             return;
         }
-    }
+    
     string filename = argv[2];
     string cmd;
     for (int i =3; argv[i]; i++){
@@ -274,7 +274,7 @@ void exemiprof(const string &command)
         cerr << "Falta comando a ejecutar\n";
         return;
     }
-
+    
     struct rusage usage;
     struct timespec start, end;
     clock_gettime(CLOCK_REALTIME, &start);
@@ -308,9 +308,9 @@ void exemiprof(const string &command)
     out << "Tiempo sistema: " << sys_time << " s\n";
     out << "Memoria máxima (RSS): " << usage.ru_maxrss << " KB\n";
     out << "----------------------\n";
-    
+
 }
-    
+}
 int main()
 {
     bool shouldExit = false;

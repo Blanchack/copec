@@ -8,6 +8,10 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <fstream>
+#include <sys/resource.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <signal.h>
 
 using namespace std;
 
